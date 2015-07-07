@@ -113,7 +113,6 @@ public class DBReader {
 			int i = 0;
 			for (Entry<String, Movie> entry2 : tempDirectorsMovies.descendingMap().entrySet()) {
 				firstThreeRatings.add(entry2.getValue().getRating());
-				// firstThreeRatings.add(entry2.getKey());
 				if (i++ > 2) {
 					break;
 				}

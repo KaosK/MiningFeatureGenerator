@@ -7,7 +7,7 @@ import java.sql.SQLException;
 
 import org.apache.commons.configuration2.ex.ConfigurationException;
 
-import config.ConfigHandler;
+import app.config.ConfigHandler;
 
 /**
  * The creator class for the database connection.

@@ -1,4 +1,4 @@
-package csvwriter;
+package app.csvwriter;
 
 import java.io.IOException;
 

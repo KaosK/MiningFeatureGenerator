@@ -18,41 +18,30 @@ import java.util.stream.Collectors;
 
 import app.beans.Director;
 import app.beans.Movie;
+import app.csvwriter.CSVWriter;
 import app.utils.Helper;
-import csvwriter.CSVWriter;
 
 /**
  * 
- * <h1>Projekt App DBS_SS2015</h1> The program implements a simple Database
- * Query API and the output to console/GUI.
+ * <h1>MiningFeatureGenerator DBS_SS2015</h1> The program extracts Features for
+ * DataMining from a simple Database and exports them as a CSV file.
  * <p>
  * 
- * @author Projektgruppe DBS2015: Sven Klaus, Alan Rachid, Sebastian Wicke based
- *         on Nicolas Lehmann's "HelloDatabaseWorldJava"
+ * @author Projektgruppe DBS2015: Sven Klaus, Alan Rachid, Sebastian Wicke
+ * 
  */
 
-public class CSVExport {
+public class MiningFeatureGenerator {
 
-	/**
-	 * 
-	 * The main method. Calls Queries and outputs Results.
-	 * 
-	 * @param args
-	 *            Takes the database name as command line argument.
-	 *
-	 * @throws SQLException
-	 *             SQLException on Query errors.
-	 * @see SQLException
-	 */
 	public static void main(String[] args) throws SQLException {
 
-		// PART 1 - build a connection to a database
+		// connect to the database
 		Path configFile = Paths.get("dbsApp.properties");
 		ConnectionFactory connFactory = new ConnectionFactory(configFile);
 		Connection conn = connFactory.getConnection();
 
 		System.out.println();
-		System.out.println("Start:");
+		System.out.println("Starting...");
 		System.out.println();
 		if (calcGeometricMeanHelper(Arrays.asList(5.9, 6.9, 6.7, 6.4, 7.0)) == 0.958161006841741) {
 			System.out.println("calcGeometricMeanHelper Test: Success");
@@ -62,10 +51,10 @@ public class CSVExport {
 		// read the database
 		ArrayList<ArrayList<String>> features = createFeatures(new DBReader(conn));
 
-		// PART 4 - CSV
+		// Export the CSV
 		Path csvFile = Paths.get("export.csv");
-		String[] headers = { "ImdbID", "Actor1", "Actor2", "Actor3", "DirectorAverage", "AverageYearsBetweenMovies",
-				"GeometricMean" };
+		String[] headers = { "ImdbID", "Rating", "Actor1", "Actor2", "Actor3", "DirectorAverage",
+				"AverageYearsBetweenMovies", "GeometricMean" };
 		try {
 			FileWriter fWriter = new FileWriter(csvFile.toFile());
 			CSVWriter writer = new CSVWriter(fWriter, headers);
@@ -73,7 +62,7 @@ public class CSVExport {
 			writer.write(features);
 			fWriter.close();
 		} catch (IOException e) {
-			System.out.println("MÖÖP");
+			System.out.println("SUMTHIN WENT HORRIBLY WRONG");
 			e.printStackTrace();
 		}
 
@@ -100,9 +89,12 @@ public class CSVExport {
 
 			// 1st: IMDB_ID
 			attributes.add(movie.getImdbId());
-			String[] array = movie.getActor().toArray(new String[3]);
 
-			// 2nd, 3rd, 4th: Actor1, Actor2, Actor3
+			// 2nd: Rating
+			attributes.add(movie.getRating());
+
+			// 3rd, 4th, 5th: Actor1, Actor2, Actor3
+			String[] array = movie.getActor().toArray(new String[3]);
 			for (int i = 0; i < 3; i++) {
 				if (array[i] != null) {
 					attributes.add(array[i]);
@@ -119,7 +111,7 @@ public class CSVExport {
 				director2 = dbReader.getDirectors().get(dIter.next());
 			}
 
-			// 5th: DirectorAverage Rating
+			// 6th: DirectorAverage Rating
 			Double directorAverage = getAverageRating(director1);
 			if (director2 != null) {
 				directorAverage = (directorAverage + getAverageRating(director2)) / 2;
@@ -127,19 +119,22 @@ public class CSVExport {
 			directorAverage = (double) Math.round(directorAverage * 1000) / 1000;
 			attributes.add(directorAverage.toString());
 
-			// 6th: Abstand der Filme in Jahren
+			// 7th: Abstand der Filme in Jahren
 			int yearsBetween = calcYearsBetweenMovies(director1);
 			if (director2 != null) {
 				yearsBetween = (yearsBetween + calcYearsBetweenMovies(director2)) / 2;
 			}
 			attributes.add(Integer.toString(yearsBetween));
 
-			// 7th: Geometrisches Mittel der letzten fünf Filme(rating)
+			// 8th: Geometrisches Mittel der letzten fünf Filme(rating)
 			double ratingsGeometricMean = calcGeometricMean(director1);
 			if (director2 != null) {
 				ratingsGeometricMean = Math.sqrt((ratingsGeometricMean * calcGeometricMean(director2)));
 			}
+			// subtract 1 from mean and round
+			ratingsGeometricMean = ratingsGeometricMean - 1;
 			ratingsGeometricMean = (double) Math.round(ratingsGeometricMean * 10000) / 10000;
+
 			attributes.add(Double.toString(ratingsGeometricMean));
 
 			features.add(attributes);
